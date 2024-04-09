@@ -2,14 +2,16 @@ const axios = require('axios');
 const BigNumber = require('bignumber.js');
 const sendExtrinsic = require('./sign_trnsaction');
 const generateNewAccount = require('./generate_account');
+const { esploraApiBaseUrl, relayer_bitcoinAddress} = require('./config');
+const { InsertTransaction } = require('./db');
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function getTransactionList(apiBaseUrl, address) {
+async function getTransactionList(apiBaseUrl) {
   // Set up Esplora API endpoint
-  const apiUrl = `${apiBaseUrl}/address/${address}/txs`;
+  const apiUrl = `${apiBaseUrl}/address/${relayer_bitcoinAddress}/txs`;
 
   try {
     // Make the API call
@@ -18,14 +20,14 @@ async function getTransactionList(apiBaseUrl, address) {
     // Return the list of transactions
     return response.data || [];
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`Eror: ${error.message}`);
     return null;
   }
 }
 
-async function monitorTransactions(apiBaseUrl, listener_bitcoinAddress, intervalSeconds = 3) {
+async function monitorTransactions(apiBaseUrl, intervalSeconds = 3) {
   while (true) {
-    const transactions = await getTransactionList(apiBaseUrl, listener_bitcoinAddress);
+    const transactions = await getTransactionList(apiBaseUrl);
 
     if (transactions) {
       console.log('Latest transactions:');
@@ -34,28 +36,27 @@ async function monitorTransactions(apiBaseUrl, listener_bitcoinAddress, interval
         console.log("transaction: {:?}", transaction);
         if (transaction.status.confirmed) {
             let amount
-            let clarus_gen_key
             transaction.vout.forEach ( async internal_trasnaction => {
                 let senderBitcoinAddress = internal_trasnaction.scriptpubkey_address;
         
-                if ( senderBitcoinAddress == listener_bitcoinAddress ) {
+                if ( senderBitcoinAddress == relayer_bitcoinAddress ) {
                   amount = internal_trasnaction.value;
                 }
                 else {
-                  clarus_gen_key = await generateNewAccount();
                   if (amount > 0) {
                     console.log(`sender address: ${senderBitcoinAddress}`);
                     console.log(`amount: ${amount}`);
-                    console.log(`clarus_gen_key: ${clarus_gen_key}`);
-                    console.log(`clarus_gen_key address: ${clarus_gen_key.address}`);
-
                     const bitcoinAmountInSatoshis = new BigNumber(amount);
                     const bitcoinAmountInDecimal = bitcoinAmountInSatoshis.dividedBy(100000000).toString();
-                    
                     console.log(`Bitcoin amount in decimal: ${bitcoinAmountInDecimal}`);
+                    user_ss58_address = await generateNewAccount(senderBitcoinAddress);
+                    console.log(`user_ss58_address address: ${user_ss58_address}`);
+
                     // Sign transaction to mint wrapped bitcoin
                     try {
-                      await sendExtrinsic(senderBitcoinAddress, clarus_gen_key.address, bitcoinAmountInDecimal);
+                      await InsertTransaction(transaction.txid, transaction.status.block_height, amount, senderBitcoinAddress);
+                      await sendExtrinsic(senderBitcoinAddress, user_ss58_address, amount);
+
                     }
                     catch (err) {
                       console.log(`Signing error: ${err}`)
@@ -74,8 +75,4 @@ async function monitorTransactions(apiBaseUrl, listener_bitcoinAddress, interval
   }
 }
 
-// Replace 'your_esplora_api_base_url' and 'your_bitcoin_address' with your actual Esplora API base URL and Bitcoin address
-const esploraApiBaseUrl = 'https://blockstream.info/api';
-const listener_bitcoinAddress = 'bc1qgug00ay025qmte7qtukl9w9r79maerh500rfad'; //'bc1qdsalrpytc29sqcpg3ydvnys7dzdlew4e352s4p';
-
-monitorTransactions(esploraApiBaseUrl, listener_bitcoinAddress);
+monitorTransactions(esploraApiBaseUrl);

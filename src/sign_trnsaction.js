@@ -1,13 +1,12 @@
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
+const { node_url, seedPhrase} = require('./config');
 
 async function sendExtrinsic(receiverBitcoinAddress, receiverClarusAddress, amount) {
-  const provider = new WsProvider('ws://127.0.0.1:9944');
+  const provider = new WsProvider(node_url);
 
   // Create an API instance
   const api = await ApiPromise.create({ provider });
-
-  const seedPhrase = 'bottom drive obey lake curtain smoke basket hold race lonely fit walk//Bob';
 
   // Create a keyring from the seed phrase
   const keyring = new Keyring({ type: 'sr25519' });
