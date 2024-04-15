@@ -8,3 +8,16 @@ key- user_bitcoin address, keys (public hex, ss58 address, seed phrase(encrypted
 
 5. Retry mechanism for failed extrinsic. 
    Store txid in DB + Runtime.
+
+
+
+----
+1. Encryption
+2. Expose api to check address from DB
+   input - bitcoin_address
+   output - ss58 address
+3. expose All
+
+4. 3 node setup document
+
+5. Mandate calls

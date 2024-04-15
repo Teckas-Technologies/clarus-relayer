@@ -3,7 +3,7 @@ const BigNumber = require('bignumber.js');
 const { sendExtrinsic, checkTransaction } = require('./sign_trnsaction');
 const generateNewAccount = require('./generate_account');
 const { esploraApiBaseUrl, relayer_bitcoinAddress } = require('./config');
-const { InsertTransaction, getTransactionData, removeTransactionData } = require('./db');
+const { InsertTransaction, getTransactionData, removeTransactionData, checkAddress } = require('./db');
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
