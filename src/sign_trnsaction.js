@@ -2,7 +2,7 @@ const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
 const { node_url, seedPhrase} = require('./config');
 
-async function sendExtrinsic(receiverBitcoinAddress, receiverClarusAddress, amount) {
+async function sendExtrinsic(receiverBitcoinAddress, receiverClarusAddress, amount, trnxId) {
   const provider = new WsProvider(node_url);
 
   // Create an API instance
@@ -14,7 +14,7 @@ async function sendExtrinsic(receiverBitcoinAddress, receiverClarusAddress, amou
 
   const assetid = 1;
   console.log("receiverBitcoinAddress: ", receiverBitcoinAddress, " receiverClarusAddress: ", receiverClarusAddress, " amount: ", amount);
-  const transferExtrinsic = api.tx.relayer.mintWrapperToken(assetid, receiverClarusAddress, amount, receiverBitcoinAddress);
+  const transferExtrinsic = api.tx.relayer.mintWrapperToken(assetid, receiverClarusAddress, amount, receiverBitcoinAddress, trnxId);
 
   try {
     await transferExtrinsic.signAndSend(account, (result) => 
@@ -27,4 +27,22 @@ async function sendExtrinsic(receiverBitcoinAddress, receiverClarusAddress, amou
   }
 }
 
-module.exports = sendExtrinsic;
+async function checkTransaction(trnxHash, amount) {
+  const provider = new WsProvider(node_url);
+
+  // Create an API instance
+  const api = await ApiPromise.create({ provider });
+
+  const trnx_exist = await api.query.relayer.bitcoinTranxId(trnxHash);
+  if (trnx_exist == amount) {
+    return true
+  }
+  else {
+    false
+  }
+}
+
+module.exports = {
+  sendExtrinsic,
+  checkTransaction
+};
