@@ -1,0 +1,23 @@
+1. We will consider one intial generated public address as a relayer address.
+2. All deposit will come to the above generated address.
+
+3. Store keys in DB
+key- user_bitcoin address, keys (public hex, ss58 address, seed phrase(encrypted), private keys (encrypted))
+
+4. Store last seen block number in DB.
+
+5. Retry mechanism for failed extrinsic. 
+   Store txid in DB + Runtime.
+
+
+
+----
+1. Encryption
+2. Expose api to check address from DB
+   input - bitcoin_address
+   output - ss58 address
+3. expose All
+
+4. 3 node setup document
+
+5. Mandate calls
