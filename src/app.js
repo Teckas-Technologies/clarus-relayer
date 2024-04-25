@@ -1,9 +1,20 @@
+const express = require('express');
 const axios = require('axios');
 const BigNumber = require('bignumber.js');
 const { sendExtrinsic, checkTransaction } = require('./sign_trnsaction');
 const generateNewAccount = require('./generate_account');
 const { esploraApiBaseUrl, relayer_bitcoinAddress } = require('./config');
 const { InsertTransaction, getTransactionData, removeTransactionData, checkAddress, getAllUsers } = require('./db');
+const userController = require("./controller/userController.js");
+const PORT = parseInt(
+  "3000",
+ 10
+);
+
+const app = express();
+app.listen(PORT);
+
+app.use("/api/v1/users",userController);
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -117,3 +128,4 @@ async function retryTransaction(intervalSeconds = 5) {
 monitorTransactions();
 
 retryTransaction();
+
