@@ -18,7 +18,7 @@ async function connectToDatabase() {
 
 function InsertData(pair, mnemonic, bitcoinAddress) {
         const newUser = new User({
-            _bitcoinAddress: bitcoinAddress,
+            _recipientddress: bitcoinAddress,
             publicKey: pair.publicKey,
             mnemonic: mnemonic,
             ss58Address: pair.address
@@ -40,7 +40,7 @@ function InsertData(pair, mnemonic, bitcoinAddress) {
 
 function checkAddress(bitcoinAddress) {
     // Check for matching bitcoin address data in the collection
-    const data = User.find({ ["_bitcoinAddress"]: bitcoinAddress })
+    const data = User.find({ ["_recipientddress"]: bitcoinAddress })
         .then(result => {
             if (result.length > 0) {
                 console.log('Data exists in the collection.');
@@ -55,11 +55,29 @@ function checkAddress(bitcoinAddress) {
     return data
 }
 
-function InsertTransaction(id, blockNumber, amount, bitcoinAddress) {
+function getAllUsers() {
+    // Check for matching bitcoin address data in the collection
+    const data = User.find({ })
+        .then(result => {
+            if (result.length > 0) {
+                console.log('Data exists in the collection.');
+            } else {
+                console.log('No data found in the collection.');
+            }
+            return result
+        })
+        .catch(err => {
+            console.error('Error:', err);
+        });
+    return data
+}
+
+function InsertTransaction(id, blockNumber, amount, senderAddress, recipientAddress) {
     const newTrnx = new Transaction({
         _transactionId: id,
         amount: amount,
-        bitcoinAddress: bitcoinAddress,
+        senderAddress: senderAddress,
+        recipientAddress: recipientAddress,
         blockNumber: blockNumber 
     });
     newTrnx.save()
@@ -113,7 +131,8 @@ async function removeTransactionData(trnxId) {
 module.exports = {
     InsertData,
     checkAddress,
+    getAllUsers,
     InsertTransaction,
     removeTransactionData,
-    getTransactionData
+    getTransactionData,
 };

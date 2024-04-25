@@ -21,3 +21,16 @@ key- user_bitcoin address, keys (public hex, ss58 address, seed phrase(encrypted
 4. 3 node setup document
 
 5. Mandate calls
+
+---
+1. api call to generate bitcoin_address , substrate address & feed in DB
+2. fee estimation
+3. batch calls
+
+
+
+generating address
+========================
+
+npm install bip39 bitcoinjs-lib
+

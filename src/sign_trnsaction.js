@@ -19,7 +19,8 @@ async function sendExtrinsic(receiverBitcoinAddress, receiverClarusAddress, amou
   try {
     await transferExtrinsic.signAndSend(account, (result) => 
     {
-      console.log("Result: ", result.status.type, ", Userid: ",account.address, ", user-name: ", account.name)
+      // console.log(result)
+      console.log(`Result: ${result.status.type},  Userid: ${receiverClarusAddress}, block number: ${result.blockNumber}`)
     })
   } catch (err) {
     console.log("Error: Account ", account.address, "Action name: MintToken")
