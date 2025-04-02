@@ -17,10 +17,8 @@
     "axios": "^1.6.5",
     "bignumber.js": "^9.1.2",
     "express": "^4.19.2",
-    "mongodb": "^6.5.0",
     "mongoose": "^8.3.0",
-    "node-fetch": "^3.3.2",
-    "socket.io": "^4.7.2",
-    "socket.io-client": "^4.7.2"
+    "bip39": "^3.0.4",
+    "bitcoinjs-lib": "^5.2.0"
   }
 }

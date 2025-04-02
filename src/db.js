@@ -9,33 +9,37 @@ const client = connect(db_url).catch(e => {
     console.log('CONNECTION ERROR IN DATABASE', e);
 });
 
-async function connectToDatabase() {
-
-    const dbConnection = await connect(db_url).catch(e => {
-        console.log('CONNECTION ERROR IN DATABASE', e);
-    });
-}
-
-function InsertData(pair, mnemonic, bitcoinAddress) {
+function InsertUserData(data, bitcoinAddress) {
         const newUser = new User({
             _recipientddress: bitcoinAddress,
-            publicKey: pair.publicKey,
-            mnemonic: mnemonic,
-            ss58Address: pair.address
+            publicKey: data.pair.publicKey,
+            mnemonic: data.mnemonic,
+            ss58Address: data.pair.address
         });
         newUser.save()
             .then(() => {
-                console.log('Data inserted successfully');
+                console.log('InsertUserData inserted successfully');
             })
             .catch(error => {
                 // Handle duplicate key error
                 if (error.code === 11000) {
                     console.error('Duplicate key error in User collection:', error.message);
-                    // Handle the error as needed (e.g., notify user, retry with different data)
                 } else {
-                    console.error('An error occurred:', error);
+                    console.error('InsertUserDataError:', error);
                 }
             });
+        return newUser
+}
+
+async function countUser() {
+    // Count the number of documents in the collection
+    try {
+        const count = await User.countDocuments({});
+        console.log('Number of documents in the collection:', count);
+        return count
+    } catch (error) {
+        console.error('countUserError:', error);
+    }
 }
 
 function checkAddress(bitcoinAddress) {
@@ -50,7 +54,7 @@ function checkAddress(bitcoinAddress) {
             return result
         })
         .catch(err => {
-            console.error('Error:', err);
+            console.error('checkAddressError:', err);
         });
     return data
 }
@@ -67,12 +71,12 @@ function getAllUsers() {
             return result
         })
         .catch(err => {
-            console.error('Error:', err);
+            console.error('getAllUsersError:', err);
         });
     return data
 }
 
-function InsertTransaction(id, blockNumber, amount, senderAddress, recipientAddress) {
+function InsertTransactionData(id, blockNumber, amount, senderAddress, recipientAddress) {
     const newTrnx = new Transaction({
         _transactionId: id,
         amount: amount,
@@ -82,7 +86,7 @@ function InsertTransaction(id, blockNumber, amount, senderAddress, recipientAddr
     });
     newTrnx.save()
         .then(() => {
-            console.log('Data inserted successfully');
+            console.log(' InsertTransactionData inserted successfully');
         })
         .catch(error => {
               // Handle duplicate key error
@@ -90,7 +94,7 @@ function InsertTransaction(id, blockNumber, amount, senderAddress, recipientAddr
                 console.error('Duplicate key error in Tranaction collection:', error.message);
                 // Handle the error as needed (e.g., notify user, retry with different data)
             } else {
-                console.error('An error occurred:', error);
+                console.error('InsertTransactionDataError:', error);
             }
         });
 }
@@ -108,7 +112,7 @@ function getTransactionData() {
             return result
         })
         .catch(err => {
-            console.error('Error:', err);
+            console.error('getTransactionDataError:', err);
         })
         .finally(async _ => {
             await client.close;
@@ -122,17 +126,18 @@ async function removeTransactionData(trnxId) {
         const result = await Transaction.deleteOne({ "_transactionId": trnxId })
         console.log(`${trnxId} ${result.deletedCount} document deleted successfully`);
     } catch (err) {
-        console.log(err);
+        console.log("removeTransactionDataError:", err);
     }finally {
         // Close the connection when finished
         await client.close;
     }
 }
 module.exports = {
-    InsertData,
+    InsertUserData,
     checkAddress,
     getAllUsers,
-    InsertTransaction,
+    InsertTransactionData,
     removeTransactionData,
     getTransactionData,
+    countUser,
 };

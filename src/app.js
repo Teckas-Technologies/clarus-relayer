@@ -4,8 +4,10 @@ const BigNumber = require('bignumber.js');
 const { sendExtrinsic, checkTransaction } = require('./sign_trnsaction');
 const generateNewAccount = require('./generate_account');
 const { esploraApiBaseUrl, relayer_bitcoinAddress } = require('./config');
-const { InsertTransaction, getTransactionData, removeTransactionData, checkAddress, getAllUsers } = require('./db');
+const { InsertTransactionData, getTransactionData, removeTransactionData, checkAddress, getAllUsers } = require('./db');
 const userController = require("./controller/userController.js");
+const adminController = require("./controller/adminController.js");
+
 const PORT = parseInt(
   "3000",
  10
@@ -15,6 +17,7 @@ const app = express();
 app.listen(PORT);
 
 app.use("/api/v1/users",userController);
+app.use("/api/v1/admin",adminController);
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -23,6 +26,7 @@ function sleep(ms) {
 async function getTransactionList(listener_address) {
   // Set up Esplora API endpoint
   const apiUrl = `${esploraApiBaseUrl}/address/${listener_address}/txs`;
+  console.log(`getTransactionList apiUrl: ${apiUrl}`);
 
   try {
     // Make the API call
@@ -31,7 +35,7 @@ async function getTransactionList(listener_address) {
     // Return the list of transactions
     return response.data || [];
   } catch (error) {
-    console.error(`Eror: ${error.message}`);
+    console.error(`ReadingBitcoinTransaction: ${error.message}`);
     return null;
   }
 }
@@ -42,24 +46,26 @@ async function monitorTransactions(intervalSeconds = 3) {
 
     const users = await getAllUsers();
     for (let i = 0; i < users.length; i++) {
-
+      console.log(users[i])
+      console.log(users[i]._recipientddress)
       const transactions = await getTransactionList(users[i]._recipientddress);
       const user_ss58_address = users[i].ss58Address;
       if (transactions) {
         transactions.forEach(async transaction => {
-          console.log("transaction: {:?}", transaction);
+          // console.log("transaction: {:?}", transaction);
           let senderBitcoinAddress = transaction.vin[0].prevout.scriptpubkey_address;
-          console.log("prevout: ", transaction.vin[0].prevout)
+          // console.log("prevout: ", transaction.vin[0].prevout)
           if (transaction.status.confirmed) {
-            console.log(`Transaction Hash: ${transaction.txid}, Amount: ${transaction.value / 100000000} BTC`);
+            console.log(transaction)
             let amount
             transaction.vout.forEach(async internal_trasnaction => {
               let recipientBitcoinAddress = internal_trasnaction.scriptpubkey_address;
 
+              console.log(`Transaction Hash: ${transaction.txid}, Amount: ${internal_trasnaction.value / 100000000} BTC`);
               if (recipientBitcoinAddress == users[i]._recipientddress) {
                 amount = internal_trasnaction.value;
-              }
-              else {
+              // }
+              // else {
                 if (amount > 0) {
                   // console.log(`amount: ${amount}`);
                   const bitcoinAmountInSatoshis = new BigNumber(amount);
@@ -72,7 +78,7 @@ async function monitorTransactions(intervalSeconds = 3) {
                   try {
                     const status = await checkTransaction(transaction.txid, amount);
                     if (!status) {
-                      await InsertTransaction(transaction.txid, transaction.status.block_height, amount, senderBitcoinAddress, users[i]._recipientddress);
+                      await InsertTransactionData(transaction.txid, transaction.status.block_height, amount, senderBitcoinAddress, users[i]._recipientddress);
                       await sendExtrinsic(senderBitcoinAddress, user_ss58_address, amount, transaction.txid);
                     }
                     else {
